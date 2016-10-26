@@ -22,14 +22,16 @@ var pictionary = function() {
             var position = {x: event.pageX - offset.left,
                             y: event.pageY - offset.top};
         draw(position);
-        socket.on('draw', draw);
+        socket.emit('draw', position);
         });
     });
     canvas.on('mouseup', function(event) {
         event.preventDefault();
-        drawing - false;
+        drawing = false;
         canvas.unbind('mousemove');
     });
+    
+    socket.on('draw', draw);
 };
 
 $(document).ready(function() {

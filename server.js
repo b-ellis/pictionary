@@ -8,4 +8,13 @@ app.use(express.static('public'));
 var server = http.Server(app);
 var io = socket_io(server);
 
+io.on('connection', function(socket) {
+    console.log('Clinet:' + socket.id + ' has joined');
+    
+    
+    socket.on('draw', function(position) {
+        socket.broadcast.emit('draw');
+    });
+});
+
 server.listen(process.env.PORT || 8080);
