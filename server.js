@@ -8,12 +8,48 @@ app.use(express.static('public'));
 var server = http.Server(app);
 var io = socket_io(server);
 
+var players = [];
+
+var WORDS = [
+    "word", "letter", "number", "person", "pen", "class", "people",
+    "sound", "water", "side", "place", "man", "men", "woman", "women", "boy",
+    "girl", "year", "day", "week", "month", "name", "sentence", "line", "air",
+    "land", "home", "hand", "house", "picture", "animal", "mother", "father",
+    "brother", "sister", "world", "head", "page", "country", "question",
+    "answer", "school", "plant", "food", "sun", "state", "eye", "city", "tree",
+    "farm", "story", "sea", "night", "day", "life", "north", "south", "east",
+    "west", "child", "children", "example", "paper", "music", "river", "car",
+    "foot", "feet", "book", "science", "room", "friend", "idea", "fish",
+    "mountain", "horse", "watch", "color", "face", "wood", "list", "bird",
+    "body", "dog", "family", "song", "door", "product", "wind", "ship", "area",
+    "rock", "order", "fire", "problem", "piece", "top", "bottom", "king",
+    "space"
+];
+
+var randomWord = function() {
+    var random = Math.floor(Math.random() * WORDS.length);
+    return WORDS[random];
+};
+console.log(randomWord());
+
 io.on('connection', function(socket) {
-    console.log('Clinet:' + socket.id + ' has joined');
-    
+    // console.log('Clinet:' + socket.id + ' has joined');
+    players.push(socket.id);
     
     socket.on('draw', function(position) {
-        socket.broadcast.emit('draw');
+        socket.broadcast.emit('draw', position);
+    });
+    
+    socket.on('userGuess', function(guess) {
+      socket.broadcast.emit('userGuess', socket.id + " : " + guess); 
+    });
+    socket.on('disconnect', function() {
+        console.log('user has disconnected');
+        for (var i = 0; i < players.length; i++) {
+            if (players[i] == socket.id) {
+                players.splice(i, 1);
+            }    
+        }
     });
 });
 
