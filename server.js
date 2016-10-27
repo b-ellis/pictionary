@@ -30,11 +30,21 @@ var randomWord = function() {
     var random = Math.floor(Math.random() * WORDS.length);
     return WORDS[random];
 };
-console.log(randomWord());
 
 io.on('connection', function(socket) {
-    // console.log('Clinet:' + socket.id + ' has joined');
     players.push(socket.id);
+    
+    console.log(players);
+    
+    if (socket.id == players[0]) {
+        socket.join('drawer');
+        io.in(socket.id).emit('drawer', socket.id);
+        console.log(socket.id, " is the drawer");
+        io.in(socket.id).emit('draw word', randomWord());
+    } else {
+        socket.join('guesser');
+        io.in(socket.id).emit('guesser', socket.id);
+    }
     
     socket.on('draw', function(position) {
         socket.broadcast.emit('draw', position);
@@ -43,6 +53,7 @@ io.on('connection', function(socket) {
     socket.on('userGuess', function(guess) {
       socket.broadcast.emit('userGuess', socket.id + " : " + guess); 
     });
+    
     socket.on('disconnect', function() {
         console.log('user has disconnected');
         for (var i = 0; i < players.length; i++) {
