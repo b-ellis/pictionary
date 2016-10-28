@@ -26,6 +26,8 @@ var WORDS = [
     "space"
 ];
 
+var correctWord;
+
 var randomWord = function() {
     var random = Math.floor(Math.random() * WORDS.length);
     return WORDS[random];
@@ -33,35 +35,45 @@ var randomWord = function() {
 
 io.on('connection', function(socket) {
     players.push(socket.id);
-    
-    console.log(players);
-    
+
     if (socket.id == players[0]) {
-        socket.join('drawer');
-        io.in(socket.id).emit('drawer', socket.id);
-        console.log(socket.id, " is the drawer");
-        io.in(socket.id).emit('draw word', randomWord());
+        io.in(socket.id).emit('drawer');
+        correctWord = randomWord();
+        io.in(socket.id).emit('draw word', correctWord);
     } else {
-        socket.join('guesser');
-        io.in(socket.id).emit('guesser', socket.id);
+        io.in(socket.id).emit('guesser');
     }
-    
+
     socket.on('draw', function(position) {
         socket.broadcast.emit('draw', position);
     });
-    
+
     socket.on('userGuess', function(guess) {
-      socket.broadcast.emit('userGuess', socket.id + " : " + guess); 
+        if (guess === correctWord) {
+            correctWord = randomWord();
+            socket.broadcast.emit('new game');
+            io.in(socket.id).emit('new game');
+            io.in(socket.id).emit('drawer');
+            io.in(socket.id).emit('draw word', correctWord);
+            for (var i = 0 ; i < players.length ; i++) {
+                if(players[i] != socket.id) {
+                    io.in(players[i]).emit('guesser');
+                }
+            }
+        } else {
+            socket.broadcast.emit('userGuess', "Latest Guess: " + guess);
+        }
     });
-    
+
     socket.on('disconnect', function() {
         console.log('user has disconnected');
         for (var i = 0; i < players.length; i++) {
             if (players[i] == socket.id) {
                 players.splice(i, 1);
-            }    
+            }
         }
     });
+
 });
 
 server.listen(process.env.PORT || 8080);

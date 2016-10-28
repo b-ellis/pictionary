@@ -17,7 +17,7 @@ var guessing = function() {
         if (event.keyCode != 13) {
             return;
         }
-        
+
         console.log(guessBox.val());
         displayGuess(guessBox.val());
         socket.emit('userGuess', guessBox.val());
@@ -26,7 +26,6 @@ var guessing = function() {
 
     guessBox = $('#guess input');
     guessBox.on('keydown', onKeyDown);
-    socket.emit('userGuess', guessBox.val());
 };
 
 var draw = function(position) {
@@ -35,9 +34,9 @@ var draw = function(position) {
                     6, 0, 2 * Math.PI);
     context.fill();
 };
-    
+
 var pictionary = function() {
-    canvas.on('mousedown', function(event) {
+    canvas.bind('mousedown', function(event) {
         event.preventDefault();
         drawing = true;
         canvas.on('mousemove', function(event) {
@@ -48,22 +47,31 @@ var pictionary = function() {
         socket.emit('draw', position);
         });
     });
-    canvas.on('mouseup', function(event) {
+    canvas.bind('mouseup', function(event) {
         event.preventDefault();
         drawing = false;
         canvas.unbind('mousemove');
     });
 };
 
+function newGame() {
+    $('.hidden-word').text('');
+    $('#guess input').val('');
+    $('#guessList').text('');
+    context.clearRect(0, 0, canvas[0].width, canvas[0].height);
+    canvas.unbind();
+}
+
 $(document).ready(function() {
     canvas = $('canvas');
     context = canvas[0].getContext('2d');
     canvas[0].width = canvas[0].offsetWidth;
     canvas[0].height = canvas[0].offsetHeight;
-    
+
     socket.on('drawer', pictionary);
     socket.on('draw', draw);
     socket.on('userGuess', displayGuess);
     socket.on('guesser', guessing);
     socket.on('draw word', displayWord);
+    socket.on('new game', newGame);
 });
